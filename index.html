@@ -38,7 +38,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             try {
 
-                const registration = await navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js');
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                 console.log('Vapid Key:', vapidKey);
                 console.log('App configurada:', app);
                 console.log('Registration:', registration)
