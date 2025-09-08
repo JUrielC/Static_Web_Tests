@@ -10,17 +10,6 @@
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
 
-        //Permisos de notificación
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                console.log('Permiso de notificación concedido.');
-            } else {
-                console.warn('Permiso de notificación denegado.');
-            }
-        }).catch(err => {
-            console.error('Error solicitando permiso de notificación:', err);
-        });
-
         const firebaseConfig = {
             apiKey: "AIzaSyDcCLGpLqYnxsaOrpjkc3JN-1CoJ97ODfA",
             authDomain: "ms-notifications-66fae.firebaseapp.com",
@@ -32,13 +21,24 @@
         };
         const vapidKey = 'BCT81sZ2WORXOZB7hfcqtm6xycllg0KkRNBpS9bo0Bk2piFimhsqx0fdEzzHPTnUkNSZjGuLRarrHMX2dXbpDag';
 
-        const app = initializeApp(firebaseConfig);
-        const messaging = getMessaging(app);
+    </script>
+</head>
 
-        document.addEventListener('DOMContentLoaded', async () => {
+<body>
+    <h1>Generador de token FCM (Web)</h1>
+    <p>Copia este token y pégalo en tu backend para pruebas:</p>
+    <textarea id="token" cols="80" rows="6" readonly></textarea>
+    <button onclick="Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('Permiso de notificación concedido.');
+
+                const app = initializeApp(firebaseConfig);
+                const messaging = getMessaging(app);
+
+                document.addEventListener('DOMContentLoaded', async () => {
             try {
 
-                const registration = await navigator.serviceWorker.register('/Static_Web_Tests/firebase-messaging-sw.js');
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                 console.log('Vapid Key:', vapidKey);
                 console.log('App configurada:', app);
                 console.log('Registration:', registration)
@@ -51,6 +51,7 @@
                 if (token) {
                     document.getElementById('token').value = token;
                     console.log('Token generado:', token);
+
                 } else {
                     console.warn('No se pudo obtener token. Asegúrate de que el permiso fue concedido.');
                 }
@@ -65,13 +66,11 @@
         });
 
 
-    </script>
-</head>
-
-<body>
-    <h1>Generador de token FCM (Web)</h1>
-    <p>Copia este token y pégalo en tu backend para pruebas:</p>
-    <textarea id="token" cols="80" rows="6" readonly></textarea>
+            } else {
+                console.warn('Permiso de notificación denegado.');
+            }
+        });">
+        Otorgar permiso de notificación </button>
 </body>
 
 </html>
