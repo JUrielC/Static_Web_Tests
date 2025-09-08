@@ -13,14 +13,12 @@ const firebaseConfig = {
 };
 const vapidKey = 'BCT81sZ2WORXOZB7hfcqtm6xycllg0KkRNBpS9bo0Bk2piFimhsqx0fdEzzHPTnUkNSZjGuLRarrHMX2dXbpDag';
 
-
-
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
 export async function showToken() {
     try {
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        const registration = await navigator.serviceWorker.register('../firebase-messaging-sw.js');
         console.log('Vapid Key:', vapidKey);
         console.log('App configurada:', app);
         console.log('Registration:', registration);
