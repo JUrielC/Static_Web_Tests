@@ -28,6 +28,7 @@
     <h1>Generador de token FCM (Web)</h1>
     <p>Copia este token y pégalo en tu backend para pruebas:</p>
     <textarea id="token" cols="80" rows="6" readonly></textarea>
+    <p></p>
     <button onclick="Notification.requestPermission().then(permission => {
             if (permission === 'granted') {
                 console.log('Permiso de notificación concedido.');
