@@ -1,58 +1,79 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FCM Web Token Generator</title>
-    <script type="module">
-        import { showToken } from './js/functions.js';
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
-        import { getMessaging } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDcCLGpLqYnxsaOrpjkc3JN-1CoJ97ODfA",
-            authDomain: "ms-notifications-66fae.firebaseapp.com",
-            projectId: "ms-notifications-66fae",
-            storageBucket: "ms-notifications-66fae.firebasestorage.app",
-            messagingSenderId: "502023854276",
-            appId: "1:502023854276:web:bf13a785821dcfd479d191",
-            measurementId: "G-XWZV1JC9S6"
-        };
-        const vapidKey = 'BCT81sZ2WORXOZB7hfcqtm6xycllg0KkRNBpS9bo0Bk2piFimhsqx0fdEzzHPTnUkNSZjGuLRarrHMX2dXbpDag';
-
-        const app = initializeApp(firebaseConfig);
-        const messaging = getMessaging(app);
-
-
-
-        const registration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
-        console.log('Vapid Key:', vapidKey);
-        console.log('App configurada:', app);
-        console.log('Registration:', registration);
-
-        const button = document.querySelector("button");
-        button.addEventListener("click", () => {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    console.log("Permiso de notificación concedido.");
-                    showToken(messaging, vapidKey, registration);
-                } else {
-                    console.warn("Permiso de notificación denegado.");
-                }
-            });
-        });
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FCM Web Token Generator</title>
 </head>
-
 <body>
-    <h1>Generador de token FCM (Web)</h1>
-    <p>Copia este token y pégalo en tu backend para pruebas:</p>
-    <textarea id="token" cols="80" rows="6" readonly></textarea>
-    <p></p>
-    <button type="button">
-        Otorgar permiso de notificación </button>
-</body>
+  <h1>Generador de token FCM (Web)</h1>
+  <p>Copia este token y pégalo en tu backend para pruebas:</p>
+  <textarea id="token" cols="80" rows="6" readonly></textarea>
+  <p></p>
+  <button type="button">Otorgar permiso de notificación</button>
 
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
+
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDcCLGpLqYnxsaOrpjkc3JN-1CoJ97ODfA",
+      authDomain: "ms-notifications-66fae.firebaseapp.com",
+      projectId: "ms-notifications-66fae",
+      storageBucket: "ms-notifications-66fae.firebasestorage.app",
+      messagingSenderId: "502023854276",
+      appId: "1:502023854276:web:bf13a785821dcfd479d191",
+      measurementId: "G-XWZV1JC9S6"
+    };
+
+    const vapidKey = "BCT81sZ2WORXOZB7hfcqtm6xycllg0KkRNBpS9bo0Bk2piFimhsqx0fdEzzHPTnUkNSZjGuLRarrHMX2dXbpDag";
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+
+    const registration = await navigator.serviceWorker.register("firebase-messaging-sw.js");
+    console.log("Service Worker registrado:", registration);
+
+
+    const button = document.querySelector("button");
+    const tokenTextarea = document.getElementById("token");
+
+
+    button.addEventListener("click", async () => {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        console.log("Permiso de notificación concedido");
+
+        try {
+          const currentToken = await getToken(messaging, {
+            vapidKey,
+            serviceWorkerRegistration: registration
+          });
+
+          if (currentToken) {
+            console.log("📱 Token FCM obtenido:", currentToken);
+            tokenTextarea.value = currentToken;
+          } else {
+            console.warn("No se pudo obtener el token FCM.");
+          }
+        } catch (err) {
+          console.error("Error al obtener el token FCM:", err);
+        }
+      } else {
+        console.warn("Permiso de notificación denegado");
+      }
+    });
+
+    onMessage(messaging, (payload) => {
+      console.log("Mensaje recibido en primer plano:", payload);
+
+      if (Notification.permission === "granted") {
+        const { title, body } = payload.notification || {};
+        new Notification(title || "Notificación", { body: body || "" });
+      }
+    });
+  </script>
+</body>
 </html>
