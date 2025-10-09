@@ -10,12 +10,30 @@
   <p>Copia este token y pégalo en tu backend para pruebas:</p>
   <textarea id="token" cols="80" rows="6" readonly></textarea>
   <p></p>
-  <button type="button">Otorgar permiso de notificación</button>
+  <button type="button" id="permisoBtn">Otorgar permiso de notificación</button>
+
+  <hr />
+
+  <h2>Datos de registro</h2>
+
+  <label for="userId">User ID (UUID):</label><br />
+  <input type="text" id="userId" placeholder="Introduce un UUID o genera uno" size="50" />
+  <button id="generateUuidBtn">Generar UUID</button>
+
+  <p></p>
+
+  <label for="apiUrl">API URL:</label><br />
+  <input type="text" id="apiUrl" placeholder="https://tu-api.com" size="50" />
+
+  <p></p>
+
+  <button id="sendBtn">Enviar a API</button>
+
+  <pre id="responseOutput" style="background:#f3f3f3;padding:10px;border-radius:6px;"></pre>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
     import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
-
 
     const firebaseConfig = {
       apiKey: "AIzaSyDcCLGpLqYnxsaOrpjkc3JN-1CoJ97ODfA",
@@ -32,22 +50,34 @@
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
 
-
     const registration = await navigator.serviceWorker.register("firebase-messaging-sw.js");
     console.log("Service Worker registrado:", registration);
 
-
-    const button = document.querySelector("button");
+    // Elementos del DOM
+    const permisoBtn = document.getElementById("permisoBtn");
     const tokenTextarea = document.getElementById("token");
+    const generateUuidBtn = document.getElementById("generateUuidBtn");
+    const userIdInput = document.getElementById("userId");
+    const apiUrlInput = document.getElementById("apiUrl");
+    const sendBtn = document.getElementById("sendBtn");
+    const responseOutput = document.getElementById("responseOutput");
 
+    let currentToken = null;
 
-    button.addEventListener("click", async () => {
+    // Generar UUID
+    generateUuidBtn.addEventListener("click", () => {
+      const uuid = crypto.randomUUID();
+      userIdInput.value = uuid;
+    });
+
+    // Obtener token de FCM
+    permisoBtn.addEventListener("click", async () => {
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
         console.log("Permiso de notificación concedido");
 
         try {
-          const currentToken = await getToken(messaging, {
+          currentToken = await getToken(messaging, {
             vapidKey,
             serviceWorkerRegistration: registration
           });
@@ -66,9 +96,47 @@
       }
     });
 
+    // Enviar datos al API
+    sendBtn.addEventListener("click", async () => {
+      const apiUrl = apiUrlInput.value.trim();
+      const userId = userIdInput.value.trim();
+
+      if (!apiUrl) {
+        alert("Por favor, ingresa la URL del API.");
+        return;
+      }
+
+      if (!userId) {
+        alert("Por favor, genera o ingresa un UUID para userId.");
+        return;
+      }
+
+      if (!currentToken) {
+        alert("Primero debes generar el token de Firebase.");
+        return;
+      }
+
+      const endpoint = `${apiUrl.replace(/\/$/, "")}/api/register`;
+      const payload = { userId, token: currentToken };
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        responseOutput.textContent = `Respuesta del servidor:\n${JSON.stringify(result, null, 2)}`;
+      } catch (error) {
+        console.error("Error al enviar datos:", error);
+        responseOutput.textContent = `Error al enviar datos:\n${error.message}`;
+      }
+    });
+
+    // Mostrar notificaciones en primer plano
     onMessage(messaging, (payload) => {
       console.log("Mensaje recibido en primer plano:", payload);
-
       if (Notification.permission === "granted") {
         const { title, body } = payload.notification || {};
         new Notification(title || "Notificación", { body: body || "" });
