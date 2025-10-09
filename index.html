@@ -116,7 +116,7 @@
         return;
       }
 
-      const endpoint = `${apiUrl.replace(/\/$/, "")}/api/register`;
+      const endpoint = `${apiUrl.replace(/\/$/, "")}/api/devices/register`;
       const payload = { userId, token: currentToken };
 
       try {
